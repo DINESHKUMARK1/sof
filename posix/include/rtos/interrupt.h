@@ -122,7 +122,7 @@ static inline struct cascade_root *cascade_root_get(void)
 /* For i.MX, while building SOF with Zephyr use the interrupt_*
  * functions from second level interrupt handling and IRQ_STEER.
  */
-#if defined(__ZEPHYR__) && defined(CONFIG_IMX)
+#if defined(__ZEPHYR__) && (defined(CONFIG_AMD) || defined(CONFIG_IMX))
 int mux_interrupt_get_irq(unsigned int irq, const char *cascade);
 int mux_interrupt_register(uint32_t irq, void(*handler)(void *arg), void *arg);
 void mux_interrupt_unregister(uint32_t irq, const void *arg);
