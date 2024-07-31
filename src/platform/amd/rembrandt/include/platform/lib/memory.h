@@ -168,7 +168,8 @@ static inline void *platform_rfree_prepare(void *ptr)
 #endif
 
 #endif /* __PLATFORM_LIB_MEMORY_H__ */
-
+#define host_to_local(addr) (addr)
+#define local_to_host(addr) (addr)
 #else
 
 #error "This file shouldn't be included from outside of sof/lib/memory.h"
