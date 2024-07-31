@@ -167,9 +167,13 @@ static int acp_dma_start(struct dma_chan_data *channel)
 	acp_dma_cntl_0_t dma_cntl;
 	acp_dma_ch_sts_t dma_sts;
 	uint32_t chan_sts;
+	#ifdef __ZEPHYR__
+		uint64_t deadline = sof_cycle_get_64() + k_us_to_cyc_ceil64(500);
+    #else
 	struct timer *timer = timer_get();
 	uint64_t deadline = platform_timer_get(timer) +
 				clock_ms_to_ticks(PLATFORM_DEFAULT_CLOCK, 1) * 500 / 1000;
+	#endif
 	if (channel->status != COMP_STATE_PREPARE &&
 	    channel->status != COMP_STATE_SUSPEND)
 		return -EINVAL;
@@ -191,13 +195,21 @@ static int acp_dma_start(struct dma_chan_data *channel)
 	 * to finish the dma transfer
 	 * then initiate call back function
 	 */
+#ifdef __ZEPHYR__
+	do {
+		dma_sts = (acp_dma_ch_sts_t)dma_reg_read(channel->dma, ACP_DMA_CH_STS);
+		chan_sts = dma_sts.u32all & (1 << channel->index);
+		if (!chan_sts)
+			return 0;
+	} while (sof_cycle_get_64() <= deadline);
+#else
 	do {
 		dma_sts = (acp_dma_ch_sts_t)dma_reg_read(channel->dma, ACP_DMA_CH_STS);
 		chan_sts = dma_sts.u32all & (1 << channel->index);
 		if (!chan_sts)
 			return 0;
 	} while (platform_timer_get(timer) <= deadline);
-
+#endif
 	tr_err(&acpdma_tr, "acp-dma: timed out for dma start");
 
 	return -ETIME;
@@ -263,7 +275,11 @@ static int acp_dma_status(struct dma_chan_data *channel,
 {
 	status->state = channel->status;
 	status->flags = 0;
-	status->timestamp = timer_get_system(timer_get());
+#ifdef __ZEPHYR__
+		status->timestamp = sof_cycle_get_64();
+#else
+		status->timestamp = timer_get_system(timer_get());
+#endif
 	return 0;
 }
 
