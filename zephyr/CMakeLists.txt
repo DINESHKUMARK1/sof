@@ -369,6 +369,60 @@ if (CONFIG_SOC_MIMX9352_A55)
 
 	set(PLATFORM "imx93_a55")
 endif()
+# AMD RMB platforms
+if (CONFIG_SOC_ACP)
+        zephyr_library_sources(
+						#common#
+			${SOF_DRIVERS_PATH}/amd/common/acp_bt_dai.c
+			${SOF_DRIVERS_PATH}/amd/common/acp_dma.c
+			${SOF_DRIVERS_PATH}/amd/common/acp_dmic_dai.c
+			${SOF_DRIVERS_PATH}/amd/common/acp_dmic_dma.c
+			${SOF_DRIVERS_PATH}/amd/common/acp_sp_dma.c
+			${SOF_DRIVERS_PATH}/amd/common/ipc.c
+			#${SOF_DRIVERS_PATH}/amd/common/timer.c
+						# rembrandt#
+			${SOF_DRIVERS_PATH}/amd/rembrandt/acp_bt_dma.c
+			${SOF_DRIVERS_PATH}/amd/rembrandt/acp_dma.c
+			${SOF_DRIVERS_PATH}/amd/rembrandt/acp_dmic_dma.c
+			${SOF_DRIVERS_PATH}/amd/rembrandt/acp_hs_dai.c
+			${SOF_DRIVERS_PATH}/amd/rembrandt/acp_hs_dma.c
+			${SOF_DRIVERS_PATH}/amd/rembrandt/acp_sp_dai.c
+			${SOF_DRIVERS_PATH}/amd/rembrandt/acp_sp_dma.c
+			${SOF_DRIVERS_PATH}/amd/rembrandt/interrupt.c
+			${SOF_DRIVERS_PATH}/amd/rembrandt/ipc.c
+
+        )
+
+        # Platform sources
+        zephyr_library_sources(
+                ${SOF_PLATFORM_PATH}/amd/rembrandt/platform.c
+                ${SOF_PLATFORM_PATH}/amd/rembrandt/lib/clk.c
+                ${SOF_PLATFORM_PATH}/amd/rembrandt/lib/dai.c
+                ${SOF_PLATFORM_PATH}/amd/rembrandt/lib/dma.c
+                ${SOF_PLATFORM_PATH}/amd/rembrandt/lib/memory.c
+
+        )
+
+        # SOF core infrastructure - runs on top of Zephyr
+        zephyr_library_sources(
+                ${SOF_SRC_PATH}/drivers/interrupt.c
+        )
+
+        # Zephyr DMA domain should only be used with zephyr_ll
+        if (NOT(CONFIG_DMA_DOMAIN))
+                zephyr_library_sources(${SOF_SRC_PATH}/schedule/ll_schedule.c)
+        else()
+                zephyr_library_sources(${SOF_SRC_PATH}/schedule/zephyr_ll.c)
+        endif()
+
+        set(PLATFORM "rmb")
+
+	 zephyr_include_directories(${SOF_PLATFORM_PATH}/amd/rembrandt/include)
+	 zephyr_include_directories(${SOF_PLATFORM_PATH}/amd/common/include)
+	 zephyr_include_directories(${SOF_PLATFORM_PATH}/amd/rembrandt/include/arch)
+
+endif()
+
 
 # Building for native_posix-based whole-OS host emulator
 zephyr_library_sources_ifdef(CONFIG_ZEPHYR_POSIX
